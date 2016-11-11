@@ -1,0 +1,3 @@
+etc/ec2api
+var/lib/ec2api
+var/log/ec2api

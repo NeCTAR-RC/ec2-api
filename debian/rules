@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+export OSLO_PACKAGE_VERSION=$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p')
+export OSLO_PACKAGE_VERSION=$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p')
+
+include /usr/share/openstack-pkg-tools/pkgos.make
+
+%:
+	dh $@  --with python2,systemd
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -f debian/*.upstart debian/*.init debian/*.service .testrepository
+
+get-orig-source:
+	uscan --verbose --force-download --rename --destdir=../build-area
+
+override_dh_installinit:
+		dh_installinit --name ec2-api
+		dh_installinit --name ec2-api-metadata
+		dh_installinit --name ec2-api-s3
+
+ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
+override_dh_auto_test:
+	#ostestr
+endif

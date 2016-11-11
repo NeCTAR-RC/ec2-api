@@ -1,0 +1,3 @@
+debian/etc/ec2api.conf etc/ec2api
+debian/etc/api-paste.ini etc/ec2api
+usr/bin/ec2-api-manage usr/bin
