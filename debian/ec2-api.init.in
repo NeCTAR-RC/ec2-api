@@ -1,0 +1,16 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          ec2-api
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Should-Start:      mysql postgresql rabbitmq-server keystone
+# Should-Stop:       mysql postgresql rabbitmq-server keystone
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: ec2api
+# Description:       Provides the EC2 API service
+### END INIT INFO
+
+DESC="OpenStack EC2 API"
+PROJECT_NAME=ec2api
+NAME=ec2-api
