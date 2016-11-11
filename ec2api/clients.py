@@ -214,6 +214,8 @@ def get_os_admin_session():
             project_name=CONF.admin_tenant_name,
             tenant_name=CONF.admin_tenant_name,
             auth_url=CONF.keystone_url,
+            user_domain_id='default',
+            project_domain_id='default',
         )
         params = {'auth': auth}
         update_request_params_with_ssl(params)

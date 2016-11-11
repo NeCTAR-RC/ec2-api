@@ -51,7 +51,9 @@ class ContextTestCase(test_base.BaseTestCase):
             password=conf.admin_password,
             tenant_name=conf.admin_tenant_name,
             project_name=conf.admin_tenant_name,
-            auth_url=conf.keystone_url)
+            auth_url=conf.keystone_url,
+            user_domain_id='default',
+            project_domain_id='default')
         self.assertIsNone(ctx.user_id)
         self.assertIsNone(ctx.project_id)
         self.assertIsNone(ctx.auth_token)
