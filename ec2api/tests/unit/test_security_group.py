@@ -301,17 +301,22 @@ class SecurityGroupTestCase(base.ApiTestCase):
     def test_describe_security_groups_nova(self):
         security_group.security_group_engine = (
             security_group.SecurityGroupEngineNova())
-        self.set_mock_db_items(fakes.NOVA_DB_SECURITY_GROUP_1,
-                               fakes.NOVA_DB_SECURITY_GROUP_2)
-        self.nova.security_groups.list.return_value = (
-            [fakes.NovaSecurityGroup(fakes.NOVA_SECURITY_GROUP_1),
-             fakes.NovaSecurityGroup(fakes.NOVA_SECURITY_GROUP_2)])
+        self.set_mock_db_items(fakes.DB_SECURITY_GROUP_1,
+                               fakes.DB_SECURITY_GROUP_2,
+                               fakes.DB_SECURITY_GROUP_3,)
+        self.neutron.list_security_groups.return_value = (
+            {'security_groups': [copy.deepcopy(fakes.OS_SECURITY_GROUP_1),
+                                 fakes.OS_SECURITY_GROUP_2,
+                                 fakes.OS_SECURITY_GROUP_3]})
         resp = self.execute('DescribeSecurityGroups', {})
         self.assertThat(resp['securityGroupInfo'],
                         matchers.ListMatches(
-                            [fakes.EC2_NOVA_SECURITY_GROUP_1,
-                             fakes.EC2_NOVA_SECURITY_GROUP_2],
+                            [fakes.EC2_SECURITY_GROUP_1,
+                             fakes.EC2_SECURITY_GROUP_2,
+                             fakes.EC2_SECURITY_GROUP_3],
                             orderless_lists=True))
+        self.neutron.list_security_groups.assert_called_once_with(
+            tenant_id=fakes.ID_OS_PROJECT)
 
     def test_repair_default_security_group(self):
         security_group.security_group_engine = (
