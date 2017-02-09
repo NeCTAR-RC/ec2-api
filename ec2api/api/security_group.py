@@ -52,10 +52,7 @@ DEFAULT_GROUP_NAME = 'default'
 
 
 def get_security_group_engine():
-    if CONF.full_vpc_support:
-        return SecurityGroupEngineNeutron()
-    else:
-        return SecurityGroupEngineNova()
+    return SecurityGroupEngineNeutron()
 
 
 def create_security_group(context, group_name, group_description,
