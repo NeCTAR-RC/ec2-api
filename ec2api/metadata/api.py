@@ -23,6 +23,7 @@ from ec2api.api import clients
 from ec2api.api import ec2utils
 from ec2api.api import instance as instance_api
 from ec2api import cache_utils
+from ec2api import context as ec2_context
 from ec2api import exception
 from ec2api.i18n import _
 
@@ -268,7 +269,19 @@ def _build_block_device_mappings(context, ec2_instance, os_instance_id):
                        for num, ebs in enumerate(ebs_devices)}
         mappings.update(ebs_devices)
 
-    # TODO(ft): extend Nova API to get ephemerals and swap
+    nova = clients.nova(ec2_context.get_os_admin_context())
+    flavor = instance_api._get_os_flavor(ec2_instance['instanceType'], nova)
+    ephemeral = getattr(flavor, 'OS-FLV-EXT-DATA:ephemeral', 0)
+    if int(ephemeral) > 0:
+        root_dev = mappings['root']
+        if root_dev:
+            if root_dev[-1].isdigit():
+                mappings['ephemeral0'] = root_dev[:-2] + 'b'
+            else:
+                mappings['ephemeral0'] = root_dev[:-1] + 'b'
+        else:
+            # If no root dev let's just take a stab in the dark
+            mappings['ephemeral0'] = '/dev/vdb'
     return mappings
 
 
