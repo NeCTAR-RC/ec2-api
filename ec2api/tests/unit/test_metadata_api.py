@@ -272,12 +272,14 @@ class MetadataApiTestCase(base.ApiTestCase):
         self.assertThat(retval,
                         matchers.DictMatches(
                              {'ami': 'vda',
-                              'root': fakes.ROOT_DEVICE_NAME_INSTANCE_1}))
+                              'root': fakes.ROOT_DEVICE_NAME_INSTANCE_1,
+                              'ephemeral0': '/dev/vdb'}))
 
         retval = api._build_block_device_mappings(
                 'fake_context', fakes.EC2_INSTANCE_2, fakes.ID_OS_INSTANCE_2)
         expected = {'ami': 'sdb1',
-                    'root': fakes.ROOT_DEVICE_NAME_INSTANCE_2}
+                    'root': fakes.ROOT_DEVICE_NAME_INSTANCE_2,
+                    'ephemeral0': '/dev/sdb'}
         expected.update(fakes.EC2_BDM_METADATA_INSTANCE_2)
         self.assertThat(retval,
                         matchers.DictMatches(expected))
@@ -308,7 +310,14 @@ class MetadataApiIntegralTestCase(base.ApiTestCase):
             fakes.ID_OS_INSTANCE_2: fakes.OSInstance_full(fakes.OS_INSTANCE_2)
         })
         self.nova_admin.keypairs._get.return_value = (
-               fakes.NovaKeyPair(fakes.OS_KEY_PAIR))
+            fakes.NovaKeyPair(fakes.OS_KEY_PAIR))
+
+        class FakeFlavor(object):
+            def __init__(self):
+                self.id = 'fakeFlavorId'
+                self.name = 'fakeFlavorName'
+
+        self.nova_admin.flavors.list.return_value = [FakeFlavor()]
         self.cinder.volumes.list.return_value = [
             fakes.OSVolume(fakes.OS_VOLUME_1),
             fakes.OSVolume(fakes.OS_VOLUME_2),
