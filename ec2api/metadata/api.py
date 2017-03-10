@@ -22,6 +22,7 @@ import six
 from ec2api.api import clients
 from ec2api.api import ec2utils
 from ec2api.api import instance as instance_api
+from ec2api import cache_utils
 from ec2api import exception
 from ec2api.i18n import _
 
@@ -62,6 +63,24 @@ VERSION_DATA = {
     '2008-09-01': ['instance-action'],
     '2009-04-04': [],
 }
+
+
+MC = None
+
+
+def _get_cache():
+    global MC
+    if MC is None:
+        MC = cache_utils.get_client(expiration_time=600)
+    return MC
+
+
+def reset_cache():
+    """Reset the cache, mainly for testing
+
+    """
+    global MC
+    MC = None
 
 
 def get_version_list():
@@ -113,20 +132,27 @@ def get_metadata_item(context, path_tokens, os_instance_id, remote_ip):
     elif version not in VERSIONS:
         raise exception.EC2MetadataNotFound()
 
-    ec2_instance, ec2_reservation = (
-        _get_ec2_instance_and_reservation(context, os_instance_id))
-    # NOTE(ft): check for case of Neutron metadata proxy.
-    # It sends project_id as X-Tenant-ID HTTP header. We make sure it's correct
-    if context.project_id != ec2_reservation['ownerId']:
-        LOG.warning(_('Tenant_id %(tenant_id)s does not match tenant_id '
-                      'of instance %(instance_id)s.'),
-                    {'tenant_id': context.project_id,
-                     'instance_id': os_instance_id})
-        raise exception.EC2MetadataNotFound()
+    cache = _get_cache()
+    cache_key = '%s-%s' % (context.project_id, os_instance_id)
+    metadata = cache.get(cache_key)
 
-    metadata = _build_metadata(context, ec2_instance, ec2_reservation,
-                               os_instance_id, remote_ip)
-    # TODO(ft): cache built metadata
+    if not metadata:
+        ec2_instance, ec2_reservation = (
+            _get_ec2_instance_and_reservation(context, os_instance_id))
+        # NOTE(ft): check for case of Neutron metadata proxy.
+        # It sends project_id as X-Tenant-ID HTTP header. We make
+        # sure it's correct
+        if context.project_id != ec2_reservation['ownerId']:
+            LOG.warning(_('Tenant_id %(tenant_id)s does not match tenant_id '
+                          'of instance %(instance_id)s.'),
+                        {'tenant_id': context.project_id,
+                         'instance_id': os_instance_id})
+            raise exception.EC2MetadataNotFound()
+
+        metadata = _build_metadata(context, ec2_instance, ec2_reservation,
+                                   os_instance_id, remote_ip)
+        cache.set(cache_key, metadata)
+
     metadata = _cut_down_to_version(metadata, version)
     metadata_item = _find_path_in_tree(metadata, path_tokens[1:])
     return _format_metadata_item(metadata_item)
