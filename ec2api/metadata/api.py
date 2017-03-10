@@ -22,6 +22,7 @@ import six
 from ec2api.api import clients
 from ec2api.api import ec2utils
 from ec2api.api import instance as instance_api
+from ec2api import cache_utils
 from ec2api import exception
 from ec2api.i18n import _
 
@@ -62,6 +63,24 @@ VERSION_DATA = {
     '2008-09-01': ['instance-action'],
     '2009-04-04': [],
 }
+
+
+MC = None
+
+
+def _get_cache():
+    global MC
+    if MC is None:
+        MC = cache_utils.get_client(expiration_time=600)
+    return MC
+
+
+def reset_cache():
+    """Reset the cache, mainly for testing
+
+    """
+    global MC
+    MC = None
 
 
 def get_version_list():
@@ -124,9 +143,13 @@ def get_metadata_item(context, path_tokens, os_instance_id, remote_ip):
                      'instance_id': os_instance_id})
         raise exception.EC2MetadataNotFound()
 
-    metadata = _build_metadata(context, ec2_instance, ec2_reservation,
-                               os_instance_id, remote_ip)
-    # TODO(ft): cache built metadata
+    cache = _get_cache()
+    metadata = cache.get(os_instance_id)
+    if not metadata:
+        metadata = _build_metadata(context, ec2_instance, ec2_reservation,
+                                   os_instance_id, remote_ip)
+        cache.set(os_instance_id, metadata)
+
     metadata = _cut_down_to_version(metadata, version)
     metadata_item = _find_path_in_tree(metadata, path_tokens[1:])
     return _format_metadata_item(metadata_item)

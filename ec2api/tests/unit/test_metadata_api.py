@@ -49,6 +49,10 @@ class MetadataApiTestCase(base.ApiTestCase):
 
         self.fake_context = base.create_context()
 
+    def tearDown(self):
+        super(MetadataApiTestCase, self).tearDown()
+        api.reset_cache()
+
     def test_get_version_list(self):
         retval = api.get_version_list()
         self.assertEqual('\n'.join(api.VERSIONS + ['latest']), retval)
@@ -226,6 +230,7 @@ class MetadataApiTestCase(base.ApiTestCase):
                                                fakes.ID_OS_USER),
                'keypair')
 
+        api.reset_cache()
         self.nova.keypairs._get.side_effect = nova_exception.NotFound(404)
         self.assertRaises(
                 exception.EC2MetadataNotFound,
