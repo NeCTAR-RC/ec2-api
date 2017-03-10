@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_cache import core as cache
 from oslo_config import cfg
 from oslo_db import options
 from oslo_log import log
@@ -40,6 +41,7 @@ _DEFAULT_LOGGING_CONTEXT_FORMAT = ('%(asctime)s.%(msecs)03d %(process)d '
 
 def parse_args(argv, default_config_files=None):
     log.set_defaults(_DEFAULT_LOGGING_CONTEXT_FORMAT, _DEFAULT_LOG_LEVELS)
+    cache.configure(CONF)
     log.register_options(CONF)
     options.set_defaults(CONF, connection=_DEFAULT_SQL_CONNECTION)
 
