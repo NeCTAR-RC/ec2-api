@@ -1097,7 +1097,7 @@ def _get_os_instances_by_instances(context, instances, exactly=False,
 
 
 def _get_os_flavors(context):
-    os_flavors = clients.nova(context).flavors.list()
+    os_flavors = clients.nova(context).flavors.list(is_public=None)
     return dict((f.id, f.name) for f in os_flavors)
 
 
@@ -1119,7 +1119,7 @@ def _get_os_flavor(instance_type, nova):
     try:
         if instance_type is None:
             instance_type = CONF.default_flavor
-        os_flavor = next(f for f in nova.flavors.list()
+        os_flavor = next(f for f in nova.flavors.list(is_public=None)
                          if f.name == instance_type)
     except StopIteration:
         raise exception.InvalidParameterValue(value=instance_type,
