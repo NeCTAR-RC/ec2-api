@@ -112,10 +112,11 @@ def run_instances(context, image_id, min_count, max_count,
     if user_data:
         user_data = base64.b64decode(user_data)
 
-    vpc_id, launch_context = instance_engine.get_vpc_and_build_launch_context(
-        context, security_group,
-        subnet_id, private_ip_address, security_group_id, network_interface,
-        multiple_instances=max_count > 1)
+    vpc_id, launch_context = \
+                instance_engine.get_vpc_and_build_launch_context(
+                    context, security_group,
+                    subnet_id, private_ip_address, security_group_id,
+                    network_interface, multiple_instances=max_count > 1)
 
     ec2_reservation_id = _generate_reservation_id()
     instance_ids = []
@@ -139,6 +140,9 @@ def run_instances(context, image_id, min_count, max_count,
             extra_params = (
                 instance_engine.get_launch_extra_parameters(
                     context, cleaner, launch_context))
+
+            if CONF.use_auto_network:
+                extra_params.pop('nics', None)
 
             os_instance = nova.servers.create(
                 '%s-%s' % (ec2_reservation_id, launch_index),
@@ -1176,7 +1180,7 @@ class InstanceEngineNeutron(object):
             launch_context['security_groups'] = (
                 self.get_vpc_default_security_group_id(context, vpc_id))
 
-        if not vpc_id:
+        if not vpc_id and not CONF.use_auto_network:
             neutron = clients.neutron(context)
             launch_context['ec2_classic_nics'] = [
                 {'net-id': self.get_ec2_classic_os_network(context,
@@ -1197,6 +1201,9 @@ class InstanceEngineNeutron(object):
 
     def post_launch_action(self, context, cleaner, launch_context,
                            instance_id):
+        if CONF.use_auto_network:
+            return
+
         for data in launch_context['network_data']:
             # TODO(ft): implement update items in DB layer to prevent
             # record by record modification
