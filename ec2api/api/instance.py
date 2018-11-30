@@ -112,10 +112,15 @@ def run_instances(context, image_id, min_count, max_count,
     if user_data:
         user_data = base64.b64decode(user_data)
 
-    vpc_id, launch_context = instance_engine.get_vpc_and_build_launch_context(
-        context, security_group,
-        subnet_id, private_ip_address, security_group_id, network_interface,
-        multiple_instances=max_count > 1)
+    if CONF.use_auto_network:
+        vpc_id = None
+        launch_context = {}
+    else:
+        vpc_id, launch_context = \
+            instance_engine.get_vpc_and_build_launch_context(
+                context, security_group,
+                subnet_id, private_ip_address, security_group_id,
+                network_interface, multiple_instances=max_count > 1)
 
     ec2_reservation_id = _generate_reservation_id()
     instance_ids = []
@@ -1185,6 +1190,9 @@ class InstanceEngineNeutron(object):
         return vpc_id, launch_context
 
     def get_launch_extra_parameters(self, context, cleaner, launch_context):
+        if CONF.use_auto_network:
+            return {}
+
         if 'ec2_classic_nics' in launch_context:
             nics = launch_context['ec2_classic_nics']
         else:
@@ -1197,6 +1205,9 @@ class InstanceEngineNeutron(object):
 
     def post_launch_action(self, context, cleaner, launch_context,
                            instance_id):
+        if CONF.use_auto_network:
+            return
+
         for data in launch_context['network_data']:
             # TODO(ft): implement update items in DB layer to prevent
             # record by record modification
