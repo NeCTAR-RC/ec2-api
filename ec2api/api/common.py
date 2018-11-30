@@ -33,6 +33,9 @@ ec2_opts = [
     cfg.BoolOpt('disable_ec2_classic',
                 help='True if server does not support EC2 Classic mode '
                      'in favor of default VPC'),
+    cfg.BoolOpt('use_auto_network',
+                help='Disable any network provisioning and get the default '
+                     'networking from Nova'),
 ]
 
 CONF = cfg.CONF
