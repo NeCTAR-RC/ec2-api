@@ -112,15 +112,11 @@ def run_instances(context, image_id, min_count, max_count,
     if user_data:
         user_data = base64.b64decode(user_data)
 
-    if CONF.use_auto_network:
-        vpc_id = None
-        launch_context = {}
-    else:
-        vpc_id, launch_context = \
-            instance_engine.get_vpc_and_build_launch_context(
-                context, security_group,
-                subnet_id, private_ip_address, security_group_id,
-                network_interface, multiple_instances=max_count > 1)
+    vpc_id, launch_context = \
+                instance_engine.get_vpc_and_build_launch_context(
+                    context, security_group,
+                    subnet_id, private_ip_address, security_group_id,
+                    network_interface, multiple_instances=max_count > 1)
 
     ec2_reservation_id = _generate_reservation_id()
     instance_ids = []
@@ -144,6 +140,9 @@ def run_instances(context, image_id, min_count, max_count,
             extra_params = (
                 instance_engine.get_launch_extra_parameters(
                     context, cleaner, launch_context))
+
+            if CONF.use_auto_network:
+                extra_params.pop('nics', None)
 
             os_instance = nova.servers.create(
                 '%s-%s' % (ec2_reservation_id, launch_index),
@@ -1190,9 +1189,6 @@ class InstanceEngineNeutron(object):
         return vpc_id, launch_context
 
     def get_launch_extra_parameters(self, context, cleaner, launch_context):
-        if CONF.use_auto_network:
-            return {}
-
         if 'ec2_classic_nics' in launch_context:
             nics = launch_context['ec2_classic_nics']
         else:
