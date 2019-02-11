@@ -1180,7 +1180,7 @@ class InstanceEngineNeutron(object):
             launch_context['security_groups'] = (
                 self.get_vpc_default_security_group_id(context, vpc_id))
 
-        if not vpc_id:
+        if not vpc_id and not CONF.use_auto_network:
             neutron = clients.neutron(context)
             launch_context['ec2_classic_nics'] = [
                 {'net-id': self.get_ec2_classic_os_network(context,
