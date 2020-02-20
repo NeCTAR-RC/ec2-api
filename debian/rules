@@ -3,12 +3,11 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 export OSLO_PACKAGE_VERSION=$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p')
-export OSLO_PACKAGE_VERSION=$(shell dpkg-parsechangelog | sed -n -e 's/^Version: //p')
 
 include /usr/share/openstack-pkg-tools/pkgos.make
 
 %:
-	dh $@  --with python2,systemd
+	dh $@  --with python3,systemd --buildsystem=pybuild
 
 override_dh_auto_clean:
 	dh_auto_clean
@@ -24,5 +23,5 @@ override_dh_installinit:
 
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 override_dh_auto_test:
-	#ostestr
+	PYTHONPATH=$(CURDIR) pkgos-dh_auto_test --no-py2 "ec2api.tests.unit.*"
 endif
