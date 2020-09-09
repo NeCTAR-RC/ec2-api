@@ -1,0 +1,26 @@
+#!/bin/sh
+
+set -e 
+
+if [ "$1" = "configure" ]
+then
+	if ! getent group ec2api > /dev/null 2>&1
+	then
+		addgroup --system ec2api >/dev/null
+	fi
+	if ! getent passwd ec2api > /dev/null 2>&1
+	then
+		adduser --system --home /var/lib/ec2api --ingroup ec2api --no-create-home --shell /bin/false ec2api
+	fi
+	chown -R ec2api:ec2api /var/lib/ec2api/
+
+	chown -R ec2api:adm /var/log/ec2api/ 
+	chmod 0750 /var/log/ec2api/
+
+    chown -R root:ec2api /etc/ec2api/
+    chmod 0755 /etc/ec2api/
+    chmod -f 0640 /etc/ec2api/ec2api.conf || :
+
+fi
+
+#DEBHELPER#

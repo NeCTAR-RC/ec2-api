@@ -1,0 +1,11 @@
+ec2api (8.0.0.7.gbc11f69+bionic-2) bionic-stein; urgency=medium
+
+  * Released
+
+ -- NeCTAR Jenkins (CI) <rc-melbourne@nectar.org.au>  Fri, 21 Feb 2020 10:31:48 +1100
+
+ec2api (2.0-1) bionic; urgency=low
+
+  * Initial release.
+
+ -- Sam Morrison <sorrison@gmail.com>  Fri, 11 Nov 2016 09:29:53 +1000

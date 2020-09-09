@@ -1,0 +1,3 @@
+usr/bin/ec2-api usr/bin
+usr/bin/ec2-api-s3 usr/bin
+usr/bin/ec2-api-metadata usr/bin
